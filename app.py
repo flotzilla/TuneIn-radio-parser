@@ -1,16 +1,13 @@
 __author__ = 'bitybite'
 
-import sys
-sys.path.append('entities')
-
-from time import strftime
 from entities.TuneInRadioParser import TuneInRadioParser
-from os.path import expanduser
+from time import strftime
 import os
+import sys
+import settings
 
 station = ''
 favorite = False
-parser = TuneInRadioParser()
 
 if len(sys.argv) == 2:
     station = sys.argv[1]
@@ -31,16 +28,19 @@ else:
           '  |  where [station_name] is station name  | \n'
           '  |  and <!> if you really like this song  |\n'
           '********************************************\n')
-    parser.print_available_stations()
+    TuneInRadioParser.print_available_stations()
     sys.exit()
 
-if parser.is_station_exists(station):
-    song = parser.get_song(station)
+if TuneInRadioParser.is_station_exists(station):
+    song = TuneInRadioParser.get_song(station)
     print('**Listening now: ' + song)
 
-    if song not in parser.get_skip_words():
+    if not settings.save_to_file:
+        sys.exit(0)
+
+    if song not in TuneInRadioParser.get_skip_words():
         if len(song) > 0:
-            filename = expanduser("~") + '/radio/'
+            filename = settings.save_path
             if not os.path.exists(filename):
                 os.makedirs(filename)
             filename += '__' + station + '.txt'
@@ -50,6 +50,8 @@ if parser.is_station_exists(station):
                     res = out.write(song + ' ::: ' + strftime("%Y-%m-%d %H:%M") + ' ::: !' + '\n')
                 else:
                     res = out.write(song + ' ::: ' + strftime("%Y-%m-%d %H:%M") + '\n')
+        else:
+            print('Cannot parse song')
     else:
         print('**Cannot parse ' + song + ' , will skip')
 else:
